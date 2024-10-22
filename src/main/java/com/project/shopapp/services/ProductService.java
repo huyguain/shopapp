@@ -36,6 +36,7 @@ public class ProductService implements IProductService {
                 .name(productDTO.getName())
                 .price(productDTO.getPrice())
                 .thumbnail(productDTO.getThumbnail())
+                .description(productDTO.getDescription())
                 .category(existingCategory)
                 .build();
         return productRepository.save(newProduct);
@@ -88,17 +89,17 @@ public class ProductService implements IProductService {
     @Override
     public ProductImage createProductImage(Long productId, ProductImageDTO productImageDTO) throws Exception {
         Product existingProduct = productRepository
-                .findById(productImageDTO.getProductId())
+                .findById(productId)
                 .orElseThrow(() ->
-                        new DataNotFoundException("Can note find product with id " + productImageDTO.getProductId())
+                        new DataNotFoundException("Can note find product with id " + productId)
                 );
         ProductImage newProductImage = ProductImage.builder()
                 .product(existingProduct)
                 .imageUrl(productImageDTO.getImageUrl())
                 .build();
         int size = productImageRepository.findByProductId(productId).size();
-        if (size > 4) {
-            throw new InvalidParamException("Number of images must be <= 5");
+        if (size >= ProductImage.MAXIMUM_IMAGES_PER_PRODUCT) {
+            throw new InvalidParamException("Number of images must be <= " + ProductImage.MAXIMUM_IMAGES_PER_PRODUCT);
         }
         return productImageRepository.save(newProductImage);
     }
